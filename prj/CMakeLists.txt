@@ -1,0 +1,5 @@
+add_subdirectory(Lab1)
+add_subdirectory(Lab2)
+add_subdirectory(Lab3)
+add_subdirectory(Test_work)
+add_subdirectory(Temp_prj)
