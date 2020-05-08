@@ -2,90 +2,22 @@
 #include <iostream>
 #include <vector>
 
-
-void grayAndColorHist(cv::Mat image)
+void drawGrayScale(cv::Mat& img, int clStep, int brStep, int lvl, int width)
 {
-	// Преобразование в изображение в оттенках серого
-	cv::Mat imageGray;
-	cv::cvtColor(image, imageGray, CV_BGR2GRAY);
-
-	// Вектор, который хранит разложение на каналы
-	std::vector<cv::Mat> bgrPlanes;
-	cv::split(image, bgrPlanes);
-
-	int histSize{ 256 };
-	float range[] = { 0,256 };
-	const float* histRange = { range };
-
-	bool uniform{ true };
-	bool accumulate{ false };
-
-	cv::Mat b_hist;
-	cv::Mat g_hist;
-	cv::Mat r_hist;
-
-	cv::Mat gray_hist;
-
-	// Рассчет гистограмм
-	calcHist(&bgrPlanes[0], 1, 0, cv::Mat(), b_hist, 1, &histSize, &histRange, uniform, accumulate);
-	calcHist(&bgrPlanes[1], 1, 0, cv::Mat(), g_hist, 1, &histSize, &histRange, uniform, accumulate);
-	calcHist(&bgrPlanes[2], 1, 0, cv::Mat(), r_hist, 1, &histSize, &histRange, uniform, accumulate);
-
-	calcHist(&imageGray, 1, 0, cv::Mat(), gray_hist, 1, &histSize, &histRange, uniform, accumulate);
-
-	int hist_w{ 512 }; // 512
-	int hist_h{ 400 }; // 400
-	int bin_w{ cvRound((double)hist_w / histSize) };
-
-	// Создание пустых изображений для гистограмм
-	cv::Mat histImage(hist_h, hist_w, CV_8UC3, cv::Scalar(0, 0, 0));
-
-	cv::Mat grayHistImage(hist_h, hist_w, CV_8UC1, 255);
-
-	// Нормализация гистограмм под размер окна
-	cv::normalize(b_hist, b_hist, 0, histImage.rows, cv::NORM_MINMAX, -1, cv::Mat());
-	cv::normalize(g_hist, g_hist, 0, histImage.rows, cv::NORM_MINMAX, -1, cv::Mat());
-	cv::normalize(r_hist, r_hist, 0, histImage.rows, cv::NORM_MINMAX, -1, cv::Mat());
-
-	cv::normalize(gray_hist, gray_hist, 0, grayHistImage.rows, cv::NORM_MINMAX, -1, cv::Mat());
-
-	// Построение гистограмм
-	for (int i = 1; i < histSize; i++)
+	for (int i{ 0 }; i < width; i += clStep)
 	{
-		line(histImage, cv::Point(bin_w * (i - 1), hist_h - cvRound(b_hist.at<float>(i - 1))),
-			cv::Point(bin_w * (i), hist_h - cvRound(b_hist.at<float>(i))),
-			cv::Scalar(255, 0, 0), 2, 8, 0);
-		line(histImage, cv::Point(bin_w * (i - 1), hist_h - cvRound(g_hist.at<float>(i - 1))),
-			cv::Point(bin_w * (i), hist_h - cvRound(g_hist.at<float>(i))),
-			cv::Scalar(0, 255, 0), 2, 8, 0);
-		line(histImage, cv::Point(bin_w * (i - 1), hist_h - cvRound(r_hist.at<float>(i - 1))),
-			cv::Point(bin_w * (i), hist_h - cvRound(r_hist.at<float>(i))),
-			cv::Scalar(0, 0, 255), 2, 8, 0);
-
-		line(grayHistImage, cv::Point(bin_w * (i - 1), hist_h - cvRound(gray_hist.at<float>(i - 1))),
-			cv::Point(bin_w * (i), hist_h - cvRound(gray_hist.at<float>(i))),
-			cv::Scalar(0, 0, 0), 2, 8, 0);
+		// Рисуем оттенок серого в виде прямоугольника HEIGHTxSTEP
+		cv::rectangle(img, cv::Point(i, 0), cv::Point((i + clStep), img.rows), cv::Scalar(lvl, lvl, lvl), CV_FILLED);
+		lvl += brStep;
 	}
-
-	/// Отображение результатов
-	cv::namedWindow("Original image", CV_WINDOW_AUTOSIZE);
-	cv::imshow("Original image", image);
-
-	cv::namedWindow("Hist", CV_WINDOW_AUTOSIZE);
-	cv::imshow("Hist", histImage);
-
-	cv::namedWindow("Original image in gray", CV_WINDOW_AUTOSIZE);
-	cv::imshow("Original image in gray", imageGray);
-
-	cv::namedWindow("Gray Hist", CV_WINDOW_AUTOSIZE);
-	cv::imshow("Gray Hist", grayHistImage);
-
-	cv::waitKey(0);
 }
 
-void lab2()
+int main()
 {
-	cv::Mat image = cv::imread("C:/Admin/Programming/C++/OpenCV/data/test_data/parrot.jpg", CV_LOAD_IMAGE_COLOR);
+	// Загрузка изображения
+	cv::Mat image{ cv::imread("C:/Admin/Programming/C++/OpenCV/data/test_data/AC_Valhalla.jpg", 1) };
+	if (!image.data)
+		return -1;
 
 	// Повышение яркости изображения
 	cv::Mat imageB = image + cv::Scalar(30, 30, 30);
@@ -133,31 +65,41 @@ void lab2()
 			cv::Scalar(0, 0, 0), 2, 8, 0);
 	}
 
+	// Соединение гистограмм с полоской градаций серого
+	cv::Mat grayScale(60, histWidth, CV_8UC1);
+	drawGrayScale(grayScale, 2, 1, 0, histWidth);
+
+	cv::Mat updHist(histHeight + 60, histWidth, CV_8UC1);
+	cv::Mat updBrightHist(histHeight + 60, histWidth, CV_8UC1);
+
+	std::vector<cv::Mat>split;
+	split.push_back(cv::Mat(updHist, cv::Rect(0, 0, histWidth, histHeight)));
+	split.push_back(cv::Mat(updHist, cv::Rect(0, histHeight, histWidth, 60)));
+	split.push_back(cv::Mat(updBrightHist, cv::Rect(0, 0, histWidth, histHeight)));
+	split.push_back(cv::Mat(updBrightHist, cv::Rect(0, histHeight, histWidth, 60)));
+
+	std::vector<cv::Mat> temp;
+	temp.push_back(hist_window);
+	temp.push_back(grayScale);
+	temp.push_back(histBright_window);
+	temp.push_back(grayScale);
+
+	for (int i{ 0 }; i < 2; ++i)
+	{
+		temp[i].copyTo(split[i]);
+		temp[i + 2].copyTo(split[i + 2]);
+	}
+
 	// Отображение результатов
-	cv::namedWindow("Original image in gray", CV_WINDOW_AUTOSIZE);
-	cv::namedWindow("Hist", cv::WINDOW_AUTOSIZE);
-	cv::namedWindow("Bright image", cv::WINDOW_AUTOSIZE);
-	cv::namedWindow("Bright Hist", cv::WINDOW_AUTOSIZE);
 
 	cv::imshow("Original image in gray", imageGray);
-	cv::imshow("Hist", hist_window);
 	cv::imshow("Bright image", imageGrayB);
-	cv::imshow("Bright Hist", histBright_window);
+	cv::imshow("Hist", updHist);
+	cv::imshow("Bright Hist", updBrightHist);
 
 	cv::waitKey(0);
 
 	cv::destroyAllWindows();
-}
-
-int main()
-{
-	// Загрузка изображения
-	cv::Mat image{ cv::imread("C:/Admin/Programming/C++/OpenCV/data/test_data/parrot.jpg", 1) };
-	if (!image.data)
-		return -1;
-
-	//grayAndColorHist(image);
-	lab2();
 
 	return 0;
 }
