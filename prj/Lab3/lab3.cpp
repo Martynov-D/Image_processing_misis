@@ -90,16 +90,19 @@ int main()
 		temp[i + 2].copyTo(split[i + 2]);
 	}
 
+	cv::imwrite("C:/Admin/Programming/C++/OpenCV/data/lab_data/lab3_hist.png", updHist, { CV_IMWRITE_PNG_COMPRESSION, 0 });
+	cv::imwrite("C:/Admin/Programming/C++/OpenCV/data/lab_data/lab3_b_hist.png", updBrightHist, { CV_IMWRITE_PNG_COMPRESSION, 0 });
+
 	// Отображение результатов
 
-	cv::imshow("Original image in gray", imageGray);
+	/*cv::imshow("Original image in gray", imageGray);
 	cv::imshow("Bright image", imageGrayB);
 	cv::imshow("Hist", updHist);
 	cv::imshow("Bright Hist", updBrightHist);
 
 	cv::waitKey(0);
 
-	cv::destroyAllWindows();
+	cv::destroyAllWindows();*/
 
 	return 0;
 }

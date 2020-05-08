@@ -79,7 +79,7 @@ int main()
 	}
 
 	// -------------------------------------------------------------------------------
-	std::string writeTo{ "C:/Users/dimam/Documents/Admin/Programming/C++/OpenCV/OpenCVData/test_data/" };
+	std::string writeTo{ "C:/dmin/Programming/C++/penCV/data/lab_data/" };
 
 	cv::imwrite(writeTo + "All images.png", allImages, { CV_IMWRITE_PNG_COMPRESSION, 0 });
 
@@ -89,4 +89,5 @@ int main()
 	cv::waitKey(0);
 
 	cv::destroyAllWindows;*/
+	return 0;
 }
