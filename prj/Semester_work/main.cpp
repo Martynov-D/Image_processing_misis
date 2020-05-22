@@ -21,14 +21,14 @@ cv::Mat sgbm(const cv::Mat& left, const cv::Mat& right, int nDisparities, int SA
     int 	blockSize = SADWindowSize;
     int 	P1 = 8 * 1 * blockSize * blockSize;
     int 	P2 = 32 * 1 * blockSize * blockSize;
-    int 	disp12MaxDiff = 15;
-    int 	preFilterCap = 4;
-    int 	uniquenessRatio = 60;
-    int 	speckleWindowSize = 40; 
-    int 	speckleRange = 1;
+    int 	disp12MaxDiff = 0;
+    int 	preFilterCap = 0;
+    int 	uniquenessRatio = 0;
+    int 	speckleWindowSize = 0;
+    int 	speckleRange = 0;
     int 	mode = cv::StereoSGBM::MODE_HH;
     cv::Ptr<cv::StereoSGBM> sgbm = cv::StereoSGBM::create(minDisparity, numDisparities, blockSize, P1, P2, disp12MaxDiff, preFilterCap, uniquenessRatio, speckleWindowSize, speckleRange, mode);
-    cv::Mat disp;
+    cv::Mat disp(left.rows, left.cols, CV_32FC1);
     sgbm->compute(left, right, disp);
 
     return disp;
@@ -60,8 +60,8 @@ int main()
     cv::Mat left = getImage(left_im);
     cv::Mat right = getImage(right_im);
 
-    int numDisparities = 16 * 3;
-    int SADWindowSize = 5;
+    int numDisparities = 16 * 4;
+    int SADWindowSize = 9;
 
     cv::Mat disp;
     cv::Mat disp8;
@@ -71,32 +71,37 @@ int main()
     else
         disp = sgbm(left, right, numDisparities, SADWindowSize);
     cv::normalize(disp, disp8, 0, 255, cv::NORM_MINMAX, CV_8UC1);
-    
+
     /*
     depth = baseline * focal / disparity
     Для KITTI  baseline = 0.54m, фокусное расстояние ~721 pix.
     Диспаратность, которая получается на выходе, должна быть преобразована к размеру исходного изображения == 1242.
     */
-    cv::Mat depth = 0.54 * 721 / disp;
-    cv::normalize(depth, depth, 0, 255, cv::NORM_MINMAX, CV_8UC1);
+    /*cv::Mat depth = 721 * 0.54 / disp8;
+    cv::normalize(depth, depth, 0, 255, cv::NORM_MINMAX, CV_8UC1);*/
 
-    cv::Mat dst;
+    /*cv::Mat dst;
     cv::Mat detected_edges;
     cv::Canny(disp8, detected_edges, 50, 50 * 3, 3);
-    disp8.copyTo(dst, detected_edges);
+    disp8.copyTo(dst, detected_edges);*/
 
-    cv::Mat disp8E;
-    cv::Mat filterD = (cv::Mat_<uchar>(3,3) << 1, 0, 0, 0, 1, 0, 0, 0, 1);
-    cv::Mat filterE = (cv::Mat_<uchar>(3,3) << 0, 0, 1, 0, 1, 0, 1, 0, 0);
-    cv::Mat filterC = (cv::Mat_<uchar>(3, 3) << 0, 1, 0, 1, 0, 1, 0, 1, 0);
-    /*cv::erode(disp8, disp8E, filterD);
+   /* cv::Mat disp8E;
+    cv::Mat filterD = (cv::Mat_<uchar>(3, 3) << 1, 0, 0, 0, 1, 0, 0, 0, 1);
+    cv::erode(disp8, disp8E, filterD);
+    cv::Mat filterE = (cv::Mat_<uchar>(3, 3) << 0, 0, 1, 0, 1, 0, 1, 0, 0);
     cv::erode(disp8E, disp8E, filterE);*/
-    //cv::erode(depth, disp8E, filterC);
+   /* cv::Mat depthE;
+    cv::Mat filterC = (cv::Mat_<uchar>(3, 3) << 0, 1, 0, 1, 0, 1, 0, 1, 0);
+    cv::dilate(depth, depthE, filterC);*/
+
+    cv::Mat bgr;
+    cv::applyColorMap(disp8, bgr, cv::COLORMAP_JET);
 
     cv::imshow("Disparity map", disp8);
-    cv::imshow("Depth", depth);
-    cv::imshow("Canny", dst);
-    //cv::imshow("Erode", disp8E);
+    //cv::imshow("Depth", depth);
+    cv::imshow("Colored", bgr);
+    //cv::imshow("Canny", dst);
+    //cv::imshow("Erode", depthE);
   
 
     //cv::imwrite("C:/Admin/Programming/C++/OpenCV/data/lab_data/disp8.png", disp8, { CV_IMWRITE_PNG_COMPRESSION, 0 });
