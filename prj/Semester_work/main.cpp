@@ -75,8 +75,8 @@ int main()
     /*std::string left_im{ "inLeft.pgm" };
    std::string right_im{ "inRight.pgm" };*/
 
-    std::string left_im{ "38_l.png" };
-    std::string right_im{ "38_r.png" };
+    std::string left_im{ "199_l.png" };
+    std::string right_im{ "199_r.png" };
    
     cv::Mat left = getImage(left_im);
     cv::Mat right = getImage(right_im);
@@ -84,7 +84,7 @@ int main()
    
     int numDisparities = 16 * 4;
     int SADWindowSize = 3;
-    bool mode = false;
+    bool mode = true;
     if (mode)
     {
         SADWindowSize = 9;
@@ -96,11 +96,11 @@ int main()
     disp = stereoBm(left, right, numDisparities, SADWindowSize, mode);
     cv::normalize(disp, disp8, 0, 255, cv::NORM_MINMAX, CV_8UC1);
 
-    /*
-    depth = baseline * focal / disparity
-    Для KITTI  baseline = 0.54m, фокусное расстояние ~721 pix.
-    Диспаратность, которая получается на выходе, должна быть преобразована к размеру исходного изображения == 1242.
-    */
+    
+    //  depth = baseline * focal / disparity
+    //  Для KITTI  baseline = 0.54m, фокусное расстояние ~721 pix.
+    //  Диспаратность, которая получается на выходе, должна быть преобразована к размеру исходного изображения == 1242.
+    
     cv::Mat depth = 721 * 0.54 / disp8;
     cv::normalize(depth, depth, 0, 255, cv::NORM_MINMAX, CV_8UC1);
 
@@ -118,20 +118,23 @@ int main()
     cv::Mat filterC = (cv::Mat_<uchar>(3, 3) << 0, 1, 0, 1, 0, 1, 0, 1, 0);
     cv::dilate(depth, depthE, filterC);*/
 
-    cv::Mat bgrDisp;
+    /*cv::Mat bgrDisp;
     cv::Mat bgrDepth;
     cv::applyColorMap(disp8, bgrDisp, cv::COLORMAP_JET);
-    cv::applyColorMap(depth, bgrDepth, cv::COLORMAP_JET);
+    cv::applyColorMap(depth, bgrDepth, cv::COLORMAP_JET);*/
 
+    cv::imshow("Left", left);
+    cv::imshow("Right", right);
     cv::imshow("Disparity map", disp8);
     cv::imshow("Depth", depth);
-    cv::imshow("Colored disp", bgrDisp);
-    cv::imshow("Colored depth", bgrDepth);
+
+    /*cv::imshow("Colored disp", bgrDisp);
+    cv::imshow("Colored depth", bgrDepth);*/
     
     //cv::imshow("Canny", canny);
     //cv::imshow("Erode", depthE);
   
-    if (mode)
+   /* if (mode)
     {
         cv::imwrite("C:/Admin/Programming/C++/OpenCV/data/lab_data/disp8_BM.png", disp8, { CV_IMWRITE_PNG_COMPRESSION, 0 });
         cv::imwrite("C:/Admin/Programming/C++/OpenCV/data/lab_data/depth_BM.png", depth, { CV_IMWRITE_PNG_COMPRESSION, 0 });
@@ -145,7 +148,7 @@ int main()
         cv::imwrite("C:/Admin/Programming/C++/OpenCV/data/lab_data/disp8_BGR_SGBM.png", bgrDisp, { CV_IMWRITE_PNG_COMPRESSION, 0 });
         cv::imwrite("C:/Admin/Programming/C++/OpenCV/data/lab_data/depth_BGR_SGBM.png", bgrDepth, { CV_IMWRITE_PNG_COMPRESSION, 0 });
 
-    }
+    }*/
 
     cv::waitKey(0);
     cv::destroyAllWindows();
